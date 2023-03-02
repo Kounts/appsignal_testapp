@@ -1,0 +1,40 @@
+org: insurgate
+app: sls-test
+service: test
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  lambdaHashingVersion: 20201221
+  region: eu-central-1 # frankfurt
+  stage: staging
+  timeout: 30 # max 30 imposed by AWS
+  environment:
+    STAGE: ${opt:stage, 'dev'}
+    BEARER: ${param:BEARER, 'xxxxx'}
+    APP_SIGNAL_FRONT_KEY: ${param:APP_SIGNAL_FRONT_KEY, '4c925293-f67d-471d-9256-b0f1416dfb69'}
+
+functions:
+  test:
+    handler: clientHandler.test
+    events:
+      - http:
+          path: /test
+          method: get
+          cors:
+            origins: '*'
+
+plugins:
+  - serverless-offline
+
+# excludeDevDependencies is necessary because of a bug that will not upload some required deps
+# We remove serverless and aws-sdk manually because they're super big
+package:
+  excludeDevDependencies: false
+  patterns:
+    - '!tmp/**'
+    - '!test-results/**'
+    - '!node_modules/serverless/**'
+    - '!node_modules/aws-sdk/**'
